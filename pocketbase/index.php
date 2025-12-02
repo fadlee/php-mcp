@@ -178,7 +178,11 @@ class PocketBaseMCPServer {
                                 ],
                                 'fields' => [
                                     'type' => 'array',
-                                    'description' => 'Array of field definitions'
+                                    'description' => 'Array of field definitions',
+                                    'items' => [
+                                        'type' => 'object',
+                                        'description' => 'Field definition object'
+                                    ]
                                 ],
                                 'listRule' => [
                                     'type' => 'string',
@@ -202,7 +206,11 @@ class PocketBaseMCPServer {
                                 ],
                                 'indexes' => [
                                     'type' => 'array',
-                                    'description' => 'SQL index definitions'
+                                    'description' => 'SQL index definitions',
+                                    'items' => [
+                                        'type' => 'string',
+                                        'description' => 'SQL CREATE INDEX statement'
+                                    ]
                                 ]
                             ],
                             'required' => ['name', 'fields']
