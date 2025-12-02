@@ -17,12 +17,26 @@ class PocketBaseMCPServer {
     private $baseUrl;
     private $token;
     
-    public function __construct($baseUrl, $token) {
+    public function __construct($baseUrl, $token = null, $email = null, $password = null) {
         $this->baseUrl = rtrim($baseUrl, '/');
-        $this->token = $token;
+        
+        if ($token) {
+            $this->token = $token;
+        } elseif ($email && $password) {
+            $this->token = $this->authenticate($email, $password);
+        }
     }
     
-    private function request($method, $endpoint, $data = null, $query = []) {
+    private function authenticate($email, $password) {
+        $response = $this->request('POST', '/api/collections/_superusers/auth-with-password', [
+            'identity' => $email,
+            'password' => $password
+        ], [], false);
+        
+        return $response['token'] ?? null;
+    }
+    
+    private function request($method, $endpoint, $data = null, $query = [], $useAuth = true) {
         $url = $this->baseUrl . $endpoint;
         if (!empty($query)) {
             $url .= '?' . http_build_query($query);
@@ -34,7 +48,7 @@ class PocketBaseMCPServer {
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $method);
         
         $headers = ['Content-Type: application/json'];
-        if ($this->token) {
+        if ($useAuth && $this->token) {
             $headers[] = 'Authorization: ' . $this->token;
         }
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
@@ -737,6 +751,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     $pbUrl = $_GET['url'] ?? '';
     $pbToken = $_GET['token'] ?? '';
+    $pbEmail = $_GET['email'] ?? '';
+    $pbPassword = $_GET['password'] ?? '';
     
     if (empty($pbUrl)) {
         echo json_encode([
@@ -747,7 +763,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
     
-    $server = new PocketBaseMCPServer($pbUrl, $pbToken);
+    $server = new PocketBaseMCPServer($pbUrl, $pbToken, $pbEmail, $pbPassword);
     $response = $server->handleRequest($request);
     echo json_encode($response);
 } else {
@@ -786,14 +802,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <table>
             <tr><th>Parameter</th><th>Description</th><th>Required</th></tr>
             <tr><td><code>url</code></td><td>PocketBase server URL (e.g., http://127.0.0.1:8090)</td><td class="required">Yes</td></tr>
-            <tr><td><code>token</code></td><td>Admin/Superuser token for authentication</td><td class="required">Yes*</td></tr>
+            <tr><td><code>token</code></td><td>Admin/Superuser token for authentication</td><td>Option 1</td></tr>
+            <tr><td><code>email</code></td><td>Superuser email for authentication</td><td>Option 2</td></tr>
+            <tr><td><code>password</code></td><td>Superuser password for authentication</td><td>Option 2</td></tr>
         </table>
-        <p><small>* Token is required for collection management and accessing protected records.</small></p>
+        <p><small>Use either <code>token</code> OR <code>email</code> + <code>password</code> for authentication. Required for collection management and protected records.</small></p>
     </div>
 
     <div class="card">
         <h2>MCP Client Configuration</h2>
         <p>Add this to your MCP client configuration (e.g., Claude Desktop):</p>
+        <h3>Option 1: With Token</h3>
         <pre><code>{
   "mcpServers": {
     "pocketbase": {
@@ -801,6 +820,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       "args": [
         "mcp-remote",
         "<?= htmlspecialchars($baseUrl) ?>?url=http://127.0.0.1:8090&token=YOUR_ADMIN_TOKEN",
+        "--allow-http"
+      ]
+    }
+  }
+}</code></pre>
+        <h3>Option 2: With Email & Password</h3>
+        <pre><code>{
+  "mcpServers": {
+    "pocketbase": {
+      "command": "npx",
+      "args": [
+        "mcp-remote",
+        "<?= htmlspecialchars($baseUrl) ?>?url=http://127.0.0.1:8090&email=admin@example.com&password=YOUR_PASSWORD",
         "--allow-http"
       ]
     }
