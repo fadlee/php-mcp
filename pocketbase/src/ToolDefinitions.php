@@ -132,6 +132,49 @@ class ToolDefinitions {
                     'required' => ['collection']
                 ]
             ],
+            // Rules
+            [
+                'name' => 'get_rules_reference',
+                'description' => 'Get API rules syntax reference. Call this BEFORE update_collection_rules to understand filter syntax, operators, modifiers, and macros.',
+                'inputSchema' => [
+                    'type' => 'object',
+                    'properties' => new \stdClass()
+                ]
+            ],
+            [
+                'name' => 'update_collection_rules',
+                'description' => 'Update collection API rules (access control). Call get_rules_reference first for syntax. Use null for admin-only, "" for public, or filter expression.',
+                'inputSchema' => [
+                    'type' => 'object',
+                    'properties' => [
+                        'collection' => [
+                            'type' => 'string',
+                            'description' => 'Collection name or ID'
+                        ],
+                        'listRule' => [
+                            'type' => ['string', 'null'],
+                            'description' => 'Rule for listing records. null=admin only, ""=public, or filter expression'
+                        ],
+                        'viewRule' => [
+                            'type' => ['string', 'null'],
+                            'description' => 'Rule for viewing single record'
+                        ],
+                        'createRule' => [
+                            'type' => ['string', 'null'],
+                            'description' => 'Rule for creating records'
+                        ],
+                        'updateRule' => [
+                            'type' => ['string', 'null'],
+                            'description' => 'Rule for updating records'
+                        ],
+                        'deleteRule' => [
+                            'type' => ['string', 'null'],
+                            'description' => 'Rule for deleting records'
+                        ]
+                    ],
+                    'required' => ['collection']
+                ]
+            ],
             // Records
             [
                 'name' => 'list_records',

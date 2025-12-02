@@ -89,6 +89,12 @@ class PocketBaseMCPServer {
                 case 'delete_collection':
                     $result = $this->deleteCollection($args['collection']);
                     break;
+                case 'get_rules_reference':
+                    $result = RulesReference::get();
+                    break;
+                case 'update_collection_rules':
+                    $result = $this->updateCollectionRules($args);
+                    break;
                 case 'list_records':
                     $result = $this->listRecords($args['collection'], $args);
                     break;
@@ -166,6 +172,36 @@ class PocketBaseMCPServer {
     private function deleteCollection($collection) {
         $this->http->request('DELETE', '/api/collections/' . urlencode($collection));
         return ['message' => 'Collection deleted successfully'];
+    }
+
+    private function updateCollectionRules($args) {
+        $collection = $args['collection'];
+        $payload = [];
+
+        foreach (['listRule', 'viewRule', 'createRule', 'updateRule', 'deleteRule'] as $rule) {
+            if (array_key_exists($rule, $args)) {
+                $payload[$rule] = $args[$rule];
+            }
+        }
+
+        if (empty($payload)) {
+            return ['message' => 'No rules specified to update'];
+        }
+
+        $result = $this->http->request('PATCH', '/api/collections/' . urlencode($collection), $payload);
+        
+        return [
+            'message' => 'Collection rules updated successfully',
+            'collection' => $collection,
+            'updatedRules' => array_keys($payload),
+            'currentRules' => [
+                'listRule' => $result['listRule'] ?? null,
+                'viewRule' => $result['viewRule'] ?? null,
+                'createRule' => $result['createRule'] ?? null,
+                'updateRule' => $result['updateRule'] ?? null,
+                'deleteRule' => $result['deleteRule'] ?? null
+            ]
+        ];
     }
 
     // Records

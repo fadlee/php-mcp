@@ -3,6 +3,7 @@
 require_once __DIR__ . '/src/HttpClient.php';
 require_once __DIR__ . '/src/ToolDefinitions.php';
 require_once __DIR__ . '/src/FieldSchemaReference.php';
+require_once __DIR__ . '/src/RulesReference.php';
 require_once __DIR__ . '/src/PocketBaseMCPServer.php';
 
 use PocketBaseMCP\PocketBaseMCPServer;
