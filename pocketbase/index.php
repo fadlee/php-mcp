@@ -35,6 +35,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $pbEmail = $_GET['email'] ?? '';
     $pbPassword = $_GET['password'] ?? '';
 
+    if (!empty($pbUrl) && empty($pbToken) && empty($pbEmail) && empty($pbPassword)) {
+        $normalized = str_replace(['%5Cu0026', '%5cu0026', '\\u0026', '\\U0026'], '&', $pbUrl);
+
+        if ($normalized !== $pbUrl && str_contains($normalized, '&')) {
+            $segments = explode('&', $normalized);
+            $pbUrl = array_shift($segments);
+            $embeddedQuery = implode('&', $segments);
+
+            $embedded = [];
+            parse_str($embeddedQuery, $embedded);
+
+            $pbToken = $embedded['token'] ?? $pbToken;
+            $pbEmail = $embedded['email'] ?? $pbEmail;
+            $pbPassword = $embedded['password'] ?? $pbPassword;
+        }
+    }
+
     if (empty($pbUrl)) {
         echo json_encode([
             'jsonrpc' => '2.0',
@@ -49,7 +66,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     echo json_encode($response);
 } else {
     header('Content-Type: text/html; charset=utf-8');
-    $baseUrl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http') 
+    $baseUrl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http')
         . '://' . $_SERVER['HTTP_HOST'] . strtok($_SERVER['REQUEST_URI'], '?');
     require __DIR__ . '/templates/docs.html.php';
 }
