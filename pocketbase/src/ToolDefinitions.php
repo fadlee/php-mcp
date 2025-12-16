@@ -102,7 +102,7 @@ class ToolDefinitions {
             ],
             [
                 'name' => 'update_collection',
-                'description' => 'Update an existing collection',
+                'description' => 'Update an existing collection. For schema changes (add/remove fields) you must send a valid payload. If updating fields, provide the full fields array (existing fields + your changes), not just the new field.',
                 'inputSchema' => [
                     'type' => 'object',
                     'properties' => [
@@ -112,10 +112,38 @@ class ToolDefinitions {
                         ],
                         'data' => [
                             'type' => 'object',
-                            'description' => 'Collection data to update'
+                            'description' => 'Collection data to update. For schema changes, include fields as a full array (existing + new/removed). If omitted, you may pass update properties directly at the top-level (besides collection).'
+                        ],
+                        'fields' => [
+                            'type' => 'array',
+                            'description' => 'Optional shorthand to update the collection fields (schema). Must be the full fields array (existing + changes).'
+                        ],
+                        'indexes' => [
+                            'type' => 'array',
+                            'description' => 'Optional indexes definitions. Note that view collections may not support indexes.'
+                        ],
+                        'listRule' => [
+                            'type' => ['string', 'null'],
+                            'description' => 'List API rule (null=disallow, ""=allow all)'
+                        ],
+                        'viewRule' => [
+                            'type' => ['string', 'null'],
+                            'description' => 'View API rule'
+                        ],
+                        'createRule' => [
+                            'type' => ['string', 'null'],
+                            'description' => 'Create API rule'
+                        ],
+                        'updateRule' => [
+                            'type' => ['string', 'null'],
+                            'description' => 'Update API rule'
+                        ],
+                        'deleteRule' => [
+                            'type' => ['string', 'null'],
+                            'description' => 'Delete API rule'
                         ]
                     ],
-                    'required' => ['collection', 'data']
+                    'required' => ['collection']
                 ]
             ],
             [

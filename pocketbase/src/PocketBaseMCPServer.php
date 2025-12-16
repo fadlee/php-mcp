@@ -84,7 +84,44 @@ class PocketBaseMCPServer {
                     $result = $this->createCollection($args);
                     break;
                 case 'update_collection':
-                    $result = $this->updateCollection($args['collection'], $args['data']);
+                    $collection = $args['collection'] ?? '';
+                    if (empty($collection)) {
+                        return $this->error($id, -32602, 'Missing required parameter: collection');
+                    }
+
+                    $data = $args['data'] ?? null;
+                    if ($data === null) {
+                        $data = $args;
+                        unset($data['collection']);
+                    } else {
+                        foreach (['fields', 'indexes', 'listRule', 'viewRule', 'createRule', 'updateRule', 'deleteRule'] as $k) {
+                            if (array_key_exists($k, $args) && !array_key_exists($k, $data)) {
+                                $data[$k] = $args[$k];
+                            }
+                        }
+                    }
+
+                    if (!is_array($data)) {
+                        return $this->error($id, -32602, 'Invalid parameter: data must be an object');
+                    }
+
+                    if (empty($data)) {
+                        return $this->error(
+                            $id,
+                            -32602,
+                            'Missing update payload. Provide update properties under data or at top-level (besides collection). For schema changes, send fields as the full fields array (existing fields + your changes).'
+                        );
+                    }
+
+                    if (array_key_exists('fields', $data) && !is_array($data['fields'])) {
+                        return $this->error(
+                            $id,
+                            -32602,
+                            'Invalid payload: fields must be an array. For schema changes, send the full fields array (existing fields + your changes), not just a single new field.'
+                        );
+                    }
+
+                    $result = $this->updateCollection($collection, $data);
                     break;
                 case 'delete_collection':
                     $result = $this->deleteCollection($args['collection']);
@@ -189,7 +226,7 @@ class PocketBaseMCPServer {
         }
 
         $result = $this->http->request('PATCH', '/api/collections/' . urlencode($collection), $payload);
-        
+
         return [
             'message' => 'Collection rules updated successfully',
             'collection' => $collection,
